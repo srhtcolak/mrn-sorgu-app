@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>MRN Araştırma / Tahsilat Durumu Sorgulama</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 40px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .note {
+            background-color: #fffbe6;
+            border-left: 6px solid #f0ad4e;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #eef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>MRN Araştırma / Tahsilat Durumu Sorgulama</h1>
+    <form id="queryForm" method="POST">
+        <input type="text" name="mrn" id="mrnInput" placeholder="MRN giriniz (örnek: 24TR...)">
+        <button type="submit">Sorgula</button>
+        <a href="#" id="followupBtn" target="_blank" style="margin-left:10px;">MRN Follow Up Sorgu</a>
+    </form>
+    <div id="result"></div>
+
+    <div class="note">
+        ⚠️ Sorgulama, NCTS Yerel Koordinatörü tarafından sisteme girilen verileri içermektedir.<br>
+        ⚠️ Bu veriler, bilgi amaçlı olup yasal bir geçerliliği yoktur.<br><br>
+        📅 Veriler her pazartesi günü güncellenmektedir.
+    </div>
+
+    <div class="note">
+        İletişim: Serhat Çolak – <a href="mailto:s.colak2@ticaret.gov.tr">s.colak2@ticaret.gov.tr</a><br>
+        Fethiye Organize Sanayi Bölgesi Sarı Cadde No:2 E Blok 16140 Nilüfer Bursa/Türkiye<br>
+        KEP: bursagumrukmudurlugu@gtb.hs01.kep.tr
+    </div>
+
+    <h3>Giriş</h3>
+    <div class="note">(Veri girişi için NCTS Yerel Koordinatörü tarafından kullanılır.)</div>
+    <form id="loginForm" method="POST">
+        <input type="text" name="username" placeholder="Kullanıcı Adı"><br>
+        <input type="password" name="password" placeholder="Şifre"><br>
+        <button type="submit">Giriş Yap</button>
+    </form>
+
+    <div id="uploadSection" style="display:none;">
+        <h3>Excel Yükle (Admin)</h3>
+        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx">
+            <button type="submit">Verileri Güncelle</button>
+        </form>
+    </div>
+</div>
+<script>
+document.getElementById("queryForm").onsubmit = async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetch("/query", { method: "POST", body: formData });
+    const data = await res.json();
+    const resultDiv = document.getElementById("result");
+    if (data.error) {
+        resultDiv.innerHTML = "<b>Hata:</b> " + data.error;
+    } else {
+        document.querySelector(".container").innerHTML =
+            "<h2>Sorgulama Sonucu</h2>" +
+            "<b>MRN:</b> " + data.MRN + "<br>" +
+            "<b>Statü:</b> " + data['Statü'] + "<br>" +
+            "<b>Varış Gümrük İdaresi:</b> " + data['Varış Gümrük İdaresi'] + "<br>" +
+            "<b>Rejim Hak Sahibi:</b> " + data['Rejim Hak Sahibi'];
+    }
+};
+
+document.getElementById("loginForm").onsubmit = async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetch("/login", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("uploadSection").style.display = "block";
+        alert("Giriş başarılı!");
+    } else {
+        alert("Hatalı giriş.");
+    }
+};
+
+document.getElementById("mrnInput").addEventListener("input", function() {
+    const mrn = this.value.toUpperCase();
+    document.getElementById("followupBtn").href =
+        "https://ec.europa.eu/taxation_customs/dds2/mrn/mrn_home.jsp?Lang=en&Expand=true&MRN=" + encodeURIComponent(mrn);
+});
+</script>
+</body>
+</html>
